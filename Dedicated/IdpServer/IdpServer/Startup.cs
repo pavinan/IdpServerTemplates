@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdpServer.Application;
 using IdpServer.Models;
 using IdpServer.Persistence;
 using Microsoft.AspNetCore.Builder;
@@ -58,6 +59,9 @@ namespace IdpServer
             });
 
             var identityBuilder = services.AddIdentity<ApplicationUser, ApplicationRole>()
+                .AddUserManager<ApplicationUserManager>()
+                .AddSignInManager<ApplicationSignInManager>()
+                .AddRoleManager<ApplicationRoleManager>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -66,6 +70,7 @@ namespace IdpServer
                 .PersistKeysToDbContext<ApplicationDbContext>();
 
             var identityServerBuilder = services.AddIdentityServer()
+                .AddAspNetIdentity<ApplicationDbContext>()
                 .AddConfigurationStore(options =>
                 {
                     options.ConfigureDbContext = o =>

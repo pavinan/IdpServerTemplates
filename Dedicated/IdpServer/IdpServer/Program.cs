@@ -21,7 +21,14 @@ namespace IdpServer
 
             using (var scope = host.Services.CreateScope())
             {
-                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync();
+                var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database;
+
+                if (!await database.CanConnectAsync())
+                {
+                    throw new Exception("Unable to connect with database.");
+                }
+
+                await database.MigrateAsync();
                 await scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>().Database.MigrateAsync();
                 await scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.MigrateAsync();
             }
