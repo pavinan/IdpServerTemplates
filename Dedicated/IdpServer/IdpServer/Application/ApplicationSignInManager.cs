@@ -16,7 +16,7 @@ namespace IdpServer.Application
         public ApplicationSignInManager(
             ApplicationUserManager userManager,
             IHttpContextAccessor contextAccessor, 
-            IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory,
+            ApplicationUserClaimsPrincipalFactory claimsFactory,
             IOptions<IdentityOptions> optionsAccessor, 
             ILogger<ApplicationSignInManager> logger,
             IAuthenticationSchemeProvider schemes, 

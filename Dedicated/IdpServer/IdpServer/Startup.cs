@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using IdpServer.Application;
+using IdpServer.Infrastructure;
 using IdpServer.Models;
 using IdpServer.Persistence;
 using Microsoft.AspNetCore.Builder;
@@ -28,8 +29,6 @@ namespace IdpServer
             Configuration = configuration;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
@@ -58,19 +57,20 @@ namespace IdpServer
                 });
             });
 
-            var identityBuilder = services.AddIdentity<ApplicationUser, ApplicationRole>()
-                .AddUserManager<ApplicationUserManager>()
-                .AddSignInManager<ApplicationSignInManager>()
-                .AddRoleManager<ApplicationRoleManager>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-
 
             services.AddDataProtection()
                 .PersistKeysToDbContext<ApplicationDbContext>();
 
+            var identityBuilder = services.AddIdentity<ApplicationUser, ApplicationRole>()
+                .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipalFactory>()
+                .AddRoleManager<ApplicationRoleManager>()
+                .AddUserManager<ApplicationUserManager>()
+                .AddSignInManager<ApplicationSignInManager>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
             var identityServerBuilder = services.AddIdentityServer()
-                .AddAspNetIdentity<ApplicationDbContext>()
+                .AddAspNetIdentity<ApplicationUser>()
                 .AddConfigurationStore(options =>
                 {
                     options.ConfigureDbContext = o =>
@@ -88,6 +88,7 @@ namespace IdpServer
 
             identityServerBuilder.AddDeveloperSigningCredential();
 
+            services.ConfigureNonBreakingSameSiteCookies();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -98,6 +99,7 @@ namespace IdpServer
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCookiePolicy();
             app.UseStaticFiles();
             app.UseRouting();
 
@@ -106,7 +108,7 @@ namespace IdpServer
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapDefaultControllerRoute();                
+                endpoints.MapDefaultControllerRoute();
             });
         }
     }
