@@ -21,5 +21,14 @@
     "inputFiles": [
       "wwwroot/lib/bootstrap/dist/css/bootstrap.min.css"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/dist/styles.css",
+    "minify": {
+      "enabled": true
+    },
+    "inputFiles": [
+      "wwwroot/app/css/app.css"
+    ]
   }
 ]
