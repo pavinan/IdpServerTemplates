@@ -1,0 +1,12 @@
+﻿{
+  "profiles": {
+    "angular": {
+      "commandName": "AngularWebSpa",
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:47001",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
