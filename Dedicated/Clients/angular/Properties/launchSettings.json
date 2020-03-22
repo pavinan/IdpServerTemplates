@@ -1,7 +1,7 @@
 ﻿{
   "profiles": {
-    "angular": {
-      "commandName": "AngularWebSpa",
+    "AngularWebSpa": {
+      "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "https://localhost:47001",
       "environmentVariables": {
