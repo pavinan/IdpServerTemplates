@@ -86,7 +86,9 @@ namespace IdpServer
                     };
                 });
 
-            identityServerBuilder.AddDeveloperSigningCredential();
+            identityServerBuilder.AddDeveloperSigningCredential(
+                signingAlgorithm: IdentityServer4.IdentityServerConstants.RsaSigningAlgorithm.PS256
+                );
 
             services.ConfigureNonBreakingSameSiteCookies();
         }
