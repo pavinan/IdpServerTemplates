@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ProxyKit;
 
 namespace Angular
 {
@@ -17,6 +18,8 @@ namespace Angular
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddProxy();
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -27,20 +30,48 @@ namespace Angular
                 app.UseDeveloperExceptionPage();
             }
 
+            if (!env.IsDevelopment())
+            {
+                app.Use(async (context, next) =>
+                {
+                    await next();
+
+                    // If there's no available file and the request doesn't contain an extension, we're probably trying to access a page.
+                    // Rewrite request to use app root
+                    if (context.Response.StatusCode == 404 && !Path.HasExtension(context.Request.Path.Value) && !context.Request.Path.Value.StartsWith("/api"))
+                    {
+                        context.Request.Path = "/index.html";
+                        context.Response.StatusCode = 200; // Make sure we update the status code, otherwise it returns 404
+                        await next();
+                    }
+                });
+            }
+
             app.UseStaticFiles();
 
-
-            app.UseSpa(spa =>
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
             {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
+                endpoints.MapControllers();
 
-                if (env.IsDevelopment())
-                {
-                    spa.Options.SourcePath = ".";
-                    spa.UseAngularCliServer(npmScript: "start");
-                }
             });
+
+            if (env.IsDevelopment())
+            {
+                app.MapWhen(x => x.Response.StatusCode == 404, appProxy =>
+                {
+                    app.UseWebSockets();
+                    app.UseWebSocketProxy(
+                      context => new Uri("ws://localhost:4200"),
+                      options => options.AddXForwardedHeaders());
+
+                    app.RunProxy(context => context
+                    .ForwardTo("http://localhost:4200")
+                    .AddXForwardedHeaders()
+                    .Send());
+
+                });
+            }
         }
     }
 }
