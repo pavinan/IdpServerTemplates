@@ -74,7 +74,7 @@ namespace IdpServer.Controllers.Account
                     UserName = userId,
                     Email = viewModel.Email,
                     LastName = viewModel.LastName,
-                    FirstName = viewModel.LastName
+                    FirstName = viewModel.FirstName
                 };
 
                 var createUserResult = await _userManager.CreateAsync(user, viewModel.Password);

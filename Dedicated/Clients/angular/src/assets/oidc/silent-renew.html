@@ -1,0 +1,10 @@
+
+<script src="./oidc-client.min.js"></script>
+<script>
+  var userManager = new Oidc.UserManager();
+  userManager.clearStaleState().then(function () {
+    userManager.signinSilentCallback().catch(function (error) {
+      console.error(error);
+    });
+  });
+</script>

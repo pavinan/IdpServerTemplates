@@ -50,6 +50,7 @@ namespace IdpServer
                     ClientName = "JS Clients",
                     AllowedGrantTypes = GrantTypes.Code,
                     RequirePkce = true,
+                    RequireClientSecret = false,
                     AllowAccessTokensViaBrowser = true,
                     RequireConsent = false,
                     AllowedCorsOrigins = { $"{spaUrl}" },
@@ -59,11 +60,31 @@ namespace IdpServer
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
-                        "all"
+                        IdentityServerConstants.StandardScopes.Email,
+                        "identity"
                     }
                 };
 
                 await dbContext.Clients.AddAsync(spaClient.ToEntity());
+
+                await dbContext.SaveChangesAsync();
+            }
+
+
+            if (!await dbContext.ApiResources.AnyAsync())
+            {
+                var apiResource = new ApiResource("identity", "Identity");
+
+                await dbContext.ApiResources.AddAsync(apiResource.ToEntity());
+
+                await dbContext.SaveChangesAsync();
+            }
+
+            if (!await dbContext.IdentityResources.AnyAsync())
+            {
+                await dbContext.IdentityResources.AddAsync(new IdentityResources.OpenId().ToEntity());
+                await dbContext.IdentityResources.AddAsync(new IdentityResources.Profile().ToEntity());
+                await dbContext.IdentityResources.AddAsync(new IdentityResources.Email().ToEntity());
 
                 await dbContext.SaveChangesAsync();
             }

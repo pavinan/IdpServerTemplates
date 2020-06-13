@@ -83,11 +83,13 @@ namespace IdpServer
                     };
                 })
                 .AddOperationalStore(options =>
-                {
+                {                    
                     options.ConfigureDbContext = o =>
                     {
                         o.UseSqlServer(connString, sql => sql.MigrationsAssembly(migrationAssembly));
                     };
+
+                    options.EnableTokenCleanup = true;
                 });
 
             identityServerBuilder.AddDeveloperSigningCredential(
