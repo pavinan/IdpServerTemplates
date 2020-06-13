@@ -2,10 +2,12 @@
 using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
 using IdentityServer4.Models;
+using IdpServer.ConfigModels;
 using IdpServer.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,30 +38,35 @@ namespace IdpServer
 
             var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
-            var spaUrl = configuration.GetSection("ClientUrls").GetValue<string>("Angular");
+            var spaClientExists = await dbContext.Clients.AnyAsync(x => x.ClientId == "internal::js");
 
-            var spaClient = new Client
+            if (!spaClientExists)
             {
-                ClientId = "js",
-                ClientName = "JS Clients",
-                AllowedGrantTypes = GrantTypes.Code,
-                RequirePkce = true,
-                AllowAccessTokensViaBrowser = true,
-                RequireConsent = false,
-                AllowedCorsOrigins = { $"{spaUrl}" },
-                RedirectUris = { $"{spaUrl}/signin-callback", $"{spaUrl}/assets/oidc/silent-renew.html" },
-                PostLogoutRedirectUris = { $"{spaUrl}" },
-                AllowedScopes =
+                var spaUrl = serviceProvider.GetRequiredService<IOptions<AppConfig>>().Value.ClientUrls.Angular;
+
+                var spaClient = new Client
                 {
-                    IdentityServerConstants.StandardScopes.OpenId,
-                    IdentityServerConstants.StandardScopes.Profile,
-                    "all"
-                }
-            };
+                    ClientId = "internal::js",
+                    ClientName = "JS Clients",
+                    AllowedGrantTypes = GrantTypes.Code,
+                    RequirePkce = true,
+                    AllowAccessTokensViaBrowser = true,
+                    RequireConsent = false,
+                    AllowedCorsOrigins = { $"{spaUrl}" },
+                    RedirectUris = { $"{spaUrl}/signin-callback", $"{spaUrl}/assets/oidc/silent-renew.html" },
+                    PostLogoutRedirectUris = { $"{spaUrl}" },
+                    AllowedScopes =
+                    {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "all"
+                    }
+                };
 
-            await dbContext.Clients.AddAsync(spaClient.ToEntity());
+                await dbContext.Clients.AddAsync(spaClient.ToEntity());
 
-            await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
+            }
         }
     }
 }

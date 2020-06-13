@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using IdpServer.Application;
+using IdpServer.ConfigModels;
 using IdpServer.Infrastructure;
 using IdpServer.Models;
 using IdpServer.Persistence;
@@ -61,7 +62,10 @@ namespace IdpServer
             services.AddDataProtection()
                 .PersistKeysToDbContext<ApplicationDbContext>();
 
-            var identityBuilder = services.AddIdentity<ApplicationUser, ApplicationRole>()
+            var identityBuilder = services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+            })
                 .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipalFactory>()
                 .AddRoleManager<ApplicationRoleManager>()
                 .AddUserManager<ApplicationUserManager>()
@@ -91,6 +95,9 @@ namespace IdpServer
                 );
 
             services.ConfigureNonBreakingSameSiteCookies();
+
+            services.AddOptions();
+            services.Configure<AppConfig>(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -5,9 +5,13 @@ using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using IdpServer.Application;
+using IdpServer.ConfigModels;
+using IdpServer.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +29,7 @@ namespace IdpServer.Controllers.Account
         private readonly IClientStore _clientStore;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
+        private readonly AppConfig _appConfig;
 
         public AccountController(
             ApplicationUserManager userManager,
@@ -32,7 +37,8 @@ namespace IdpServer.Controllers.Account
             IIdentityServerInteractionService interaction,
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
-            IEventService events)
+            IEventService events,
+            IOptions<AppConfig> options)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -40,8 +46,63 @@ namespace IdpServer.Controllers.Account
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
             _events = events;
+            _appConfig = options.Value;
         }
 
+        [HttpGet]
+        public IActionResult Register(string returnUrl)
+        {
+            var vm = new RegisterViewModel
+            {
+                ReturnUrl = returnUrl
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var userId = Ulid.NewUlid().ToString();
+
+                var user = new ApplicationUser
+                {
+                    Id = userId,
+                    UserName = userId,
+                    Email = viewModel.Email,
+                    LastName = viewModel.LastName,
+                    FirstName = viewModel.LastName
+                };
+
+                var createUserResult = await _userManager.CreateAsync(user, viewModel.Password);
+
+                if (createUserResult.Succeeded)
+                {
+                    var _ = await _signInManager.PasswordSignInAsync(userId, viewModel.Password, false, lockoutOnFailure: true);
+
+                    if (Uri.TryCreate(viewModel.ReturnUrl, UriKind.RelativeOrAbsolute, out var _))
+                    {
+                        return Redirect(viewModel.ReturnUrl);
+                    }
+                    else
+                    {
+                        return Redirect(_appConfig.ClientUrls.DefaultClientUrl);
+                    }
+                }
+                else
+                {
+                    foreach (var error in createUserResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+            }
+
+            return View(viewModel);
+        }
 
         /// <summary>
         /// Entry point into the login workflow
@@ -100,38 +161,43 @@ namespace IdpServer.Controllers.Account
 
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
-                if (result.Succeeded)
-                {
-                    var user = await _userManager.FindByNameAsync(model.Username);
-                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.ClientId));
+                var user = await _userManager.Users.SingleOrDefaultAsync(x => x.UserName == model.Username || x.Email == model.Username);
 
-                    if (context != null)
+                if (user != null)
+                {
+                    var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
+
+                    if (result.Succeeded)
                     {
-                        if (await _clientStore.IsPkceClientAsync(context.ClientId))
+                        await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.ClientId));
+
+                        if (context != null)
                         {
-                            // if the client is PKCE then we assume it's native, so this change in how to
-                            // return the response is for better UX for the end user.
-                            return View("Redirect", new RedirectViewModel { RedirectUrl = model.ReturnUrl });
+                            if (await _clientStore.IsPkceClientAsync(context.ClientId))
+                            {
+                                // if the client is PKCE then we assume it's native, so this change in how to
+                                // return the response is for better UX for the end user.
+                                return View("Redirect", new RedirectViewModel { RedirectUrl = model.ReturnUrl });
+                            }
+
+                            // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
+                            return Redirect(model.ReturnUrl);
                         }
 
-                        // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                        return Redirect(model.ReturnUrl);
-                    }
-
-                    // request for a local page
-                    if (Url.IsLocalUrl(model.ReturnUrl))
-                    {
-                        return Redirect(model.ReturnUrl);
-                    }
-                    else if (string.IsNullOrEmpty(model.ReturnUrl))
-                    {
-                        return Redirect("~/");
-                    }
-                    else
-                    {
-                        // user might have clicked on a malicious link - should be logged
-                        throw new Exception("invalid return URL");
+                        // request for a local page
+                        if (Url.IsLocalUrl(model.ReturnUrl))
+                        {
+                            return Redirect(model.ReturnUrl);
+                        }
+                        else if (string.IsNullOrEmpty(model.ReturnUrl))
+                        {
+                            return Redirect("~/");
+                        }
+                        else
+                        {
+                            // user might have clicked on a malicious link - should be logged
+                            throw new Exception("invalid return URL");
+                        }
                     }
                 }
 
