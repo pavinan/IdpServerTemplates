@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { UserManager } from 'oidc-client';
+import { UserManager, User } from 'oidc-client';
 import { ConfigurationService } from '../services/configuration.service';
 import { Subject } from 'rxjs/internal/Subject';
 
@@ -8,11 +8,14 @@ import { Subject } from 'rxjs/internal/Subject';
 })
 export class AuthService {
 
-  isAuthenticated = false;
-  userManager: UserManager;
+
 
   private authStateChangesSubject = new Subject();
   public authStateChanges = this.authStateChangesSubject.asObservable();
+
+  isAuthenticated = false;
+  userManager: UserManager;
+  currentUser: User;
 
   constructor(private configurationService: ConfigurationService) {
 

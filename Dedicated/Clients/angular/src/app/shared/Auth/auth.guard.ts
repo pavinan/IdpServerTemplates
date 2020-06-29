@@ -29,6 +29,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     return new Promise<boolean>((resolve) => {
       this.authService.userManager.getUser().then(user => {
         if (user) {
+          this.authService.currentUser = user;
           resolve(true);
         } else {
           this.authService.signin(url);

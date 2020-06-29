@@ -165,7 +165,7 @@ namespace IdpServer.Controllers.Account
 
                 if (user != null)
                 {
-                    var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
+                    var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberLogin, lockoutOnFailure: true);
 
                     if (result.Succeeded)
                     {
