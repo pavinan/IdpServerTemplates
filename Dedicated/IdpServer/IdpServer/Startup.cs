@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using IdpServer.Application;
+using IdpServer.Application.Services;
+using IdpServer.BuildingBlocks.AutoMapper;
 using IdpServer.ConfigModels;
 using IdpServer.Infrastructure;
+using IdpServer.Infrastructure.Services;
 using IdpServer.Models;
 using IdpServer.Persistence;
+using MediatR;
+using MediatR.Pipeline;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -142,7 +148,20 @@ namespace IdpServer
                 });
             });
 
+            var mapperConfiguration = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new AutoMapperProfile(typeof(ApplicationUserManager).Assembly));
+            });
+
+            services.AddSingleton(mapperConfiguration.CreateMapper());
+
             services.AddOData();
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<IIdentityService, IdentityService>();
+
+            var assembly = typeof(ApplicationUserManager).Assembly;
+            services.AddMediatR(assembly);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
