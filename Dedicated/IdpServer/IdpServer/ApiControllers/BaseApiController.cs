@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IdpServer.ApiControllers
 {
-    [Route("v1.0/[controller]")]
+    [Route("api/[controller]")]
     [Authorize("api")]
     [ApiController]
     public class BaseApiController : ControllerBase

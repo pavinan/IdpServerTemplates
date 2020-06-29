@@ -10,9 +10,9 @@ namespace IdpServer
 {
     public class ODataHelpers
     {
-        public static IEdmModel GetEdmModel()
+        public static IEdmModel GetEdmModel(IServiceProvider serviceProvider)
         {
-            var odataBuilder = new ODataConventionModelBuilder();
+            var odataBuilder = new ODataConventionModelBuilder(serviceProvider);
             odataBuilder.EntitySet<ApplicationUser>("ApplicationUser");
 
             return odataBuilder.GetEdmModel();

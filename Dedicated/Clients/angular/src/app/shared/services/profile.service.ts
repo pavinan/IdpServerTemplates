@@ -17,7 +17,7 @@ export class ProfileService {
 
   get() {
 
-    return this.httpClient.get(this.configurationService.configuration.identityUrl + "/v1.0/users/me", {
+    return this.httpClient.get(this.configurationService.configuration.identityUrl + "/api/users/me", {
       withCredentials: true,
       headers: {
         "Authorization": 'Bearer ' + this.authService.currentUser.access_token

@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Serialization;
 
 namespace IdpServer
 {
@@ -35,7 +36,11 @@ namespace IdpServer
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.AddControllersWithViews().AddNewtonsoftJson(o=> 
+            {
+                o.AllowInputFormatterExceptionMessages = true;
+                o.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            });
 
             services.Configure<IISOptions>(iis =>
             {
@@ -111,9 +116,12 @@ namespace IdpServer
                 {
                     b.AllowAnyHeader();
                     b.AllowAnyMethod();
-                    b.SetPreflightMaxAge(TimeSpan.FromSeconds(10));
-                    b.SetIsOriginAllowed(x => true);
+                    b.SetPreflightMaxAge(TimeSpan.FromSeconds(10));                    
                     b.AllowCredentials();
+
+                    var origins = Configuration.GetSection("Cors").Get<string[]>() ?? new string[] { };
+
+                    b.WithOrigins(origins);
                 });
             });
 
@@ -170,7 +178,7 @@ namespace IdpServer
 
                 endpoints.Select().Filter().OrderBy().Count().MaxTop(10);
                 endpoints.EnableDependencyInjection();
-                endpoints.MapODataRoute("v1.0", "v1.0", ODataHelpers.GetEdmModel());
+                endpoints.MapODataRoute("odata", "api", ODataHelpers.GetEdmModel(app.ApplicationServices));
             });
         }
 
