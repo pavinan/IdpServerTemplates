@@ -196,7 +196,8 @@ namespace IdpServer
                 endpoints.MapDefaultControllerRoute();
 
                 endpoints.Select().Filter().OrderBy().Count().MaxTop(1000);
-                endpoints.EnableDependencyInjection();
+                //endpoints.EnableDependencyInjection();
+                endpoints.MapODataRoute("api", "api", cb => ODataHelper.GetEdmModel(app.ApplicationServices, cb));
             });
         }
 

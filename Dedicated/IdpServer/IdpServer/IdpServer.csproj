@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Application\Users\Commands\" />
     <Folder Include="Views\Home\" />
     <Folder Include="wwwroot\dist\" />
   </ItemGroup>

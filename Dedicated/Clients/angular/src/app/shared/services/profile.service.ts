@@ -1,29 +1,33 @@
 import { Injectable } from '@angular/core';
 import { ConfigurationService } from './configuration.service';
-import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../Auth/auth.service';
+import { APIService } from './api.service';
+
+export interface ApplicationUserModel {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  emailConfirmed: boolean;
+  phoneNumber: string;
+  phoneNumberConfirmed: boolean;
+  twoFactorEnabled: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
 
-  constructor(
-    private httpClient: HttpClient,
-    private authService: AuthService,
-    private configurationService: ConfigurationService) {
+  private url: string;
 
+  constructor(
+    private apiSerice: APIService,
+    private configurationService: ConfigurationService) {
+    this.url = this.configurationService.configuration.identityUrl;
   }
 
   get() {
-
-    return this.httpClient.get(this.configurationService.configuration.identityUrl + "/api/users/me", {
-      withCredentials: true,
-      headers: {
-        "Authorization": 'Bearer ' + this.authService.currentUser.access_token
-      }
-    });
-
+    return this.apiSerice.get<ApplicationUserModel>(`${this.url}/api/me`);
   }
 
 }

@@ -21,7 +21,7 @@ namespace IdpServer.Infrastructure.Services
         {
             var userId = _httpContextAccessor.HttpContext.User.Claims
                 .Where(x => x.Type == ClaimTypes.NameIdentifier)
-                .Select(x => x.Value).Single();
+                .Select(x => x.Value).SingleOrDefault();
 
             return userId;
         }

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNet.OData;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,11 +9,9 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace IdpServer.ApiControllers
-{
-    [Route("api/[controller]")]
-    [Authorize("api")]
-    [ApiController]
-    public class BaseApiController : ControllerBase
+{    
+    [Authorize("api")]    
+    public class BaseApiController : ODataController
     {
         private IMediator _mediator;
 
