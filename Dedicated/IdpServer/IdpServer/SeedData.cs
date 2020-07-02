@@ -71,11 +71,11 @@ namespace IdpServer
             }
 
 
-            if (!await dbContext.ApiResources.AnyAsync())
+            if (!await dbContext.ApiScopes.AnyAsync())
             {
-                var apiResource = new ApiResource("identity", "Identity");
+                var apiScope = new ApiScope("identity", "Identity");
 
-                await dbContext.ApiResources.AddAsync(apiResource.ToEntity());
+                await dbContext.ApiScopes.AddAsync(apiScope.ToEntity());
 
                 await dbContext.SaveChangesAsync();
             }

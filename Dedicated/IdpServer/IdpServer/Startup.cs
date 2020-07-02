@@ -135,8 +135,8 @@ namespace IdpServer
                 .AddJwtBearer(x =>
                 {
                     x.Authority = Configuration["AppUrl"];
-                    x.Audience = "identity";
-                    
+
+                    x.TokenValidationParameters.ValidateAudience = false;
                 });
 
             services.AddAuthorization(c =>
