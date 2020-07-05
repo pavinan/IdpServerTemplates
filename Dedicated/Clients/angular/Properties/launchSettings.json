@@ -1,4 +1,5 @@
 ﻿{
+  "$schema": "https://json.schemastore.org/launchsettings",
   "profiles": {
     "AngularWebSpa": {
       "commandName": "Project",
