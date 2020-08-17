@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { UserManager, User } from 'oidc-client';
 import { ConfigurationService } from '../services/configuration.service';
-import { Subject } from 'rxjs/internal/Subject';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
