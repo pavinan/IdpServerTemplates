@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ProxyKit;
+using Yarp.ReverseProxy;
 
 namespace Angular
 {
@@ -27,7 +27,10 @@ namespace Angular
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddProxy();
+            var proxyBuilder = services.AddReverseProxy();
+            // Initialize the reverse proxy from the "ReverseProxy" section of configuration
+            proxyBuilder.LoadFromConfig(Configuration.GetSection("ReverseProxy"));
+
             services.AddControllers();
             services.AddOptions();
             services.Configure<AppConfig>(Configuration.GetSection("AppConfig"));
@@ -65,23 +68,29 @@ namespace Angular
             {
                 endpoints.MapControllers();
 
+                if (env.IsDevelopment())
+                {
+                    endpoints.MapReverseProxy();
+                }
+
             });
 
             if (env.IsDevelopment())
             {
-                app.MapWhen(x => x.Response.StatusCode == 404, appProxy =>
-                {
-                    app.UseWebSockets();
-                    app.UseWebSocketProxy(
-                      context => new Uri("ws://localhost:4200"),
-                      options => options.AddXForwardedHeaders());
 
-                    app.RunProxy(context => context
-                    .ForwardTo("http://localhost:4200")
-                    .AddXForwardedHeaders()
-                    .Send());
+                // app.MapWhen(x => x.Response.StatusCode == 404, appProxy =>
+                // {
+                //     app.UseWebSockets();
+                //     app.UseWebSocketProxy(
+                //       context => new Uri("ws://localhost:4200"),
+                //       options => options.AddXForwardedHeaders());
 
-                });
+                //     app.RunProxy(context => context
+                //     .ForwardTo("http://localhost:4200")
+                //     .AddXForwardedHeaders()
+                //     .Send());
+
+                // });
             }
         }
     }

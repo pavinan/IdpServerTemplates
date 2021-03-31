@@ -107,7 +107,7 @@ namespace IdpServer
                 });
 
             identityServerBuilder.AddDeveloperSigningCredential(
-                signingAlgorithm: IdentityServer4.IdentityServerConstants.RsaSigningAlgorithm.PS256
+                signingAlgorithm: Duende.IdentityServer.IdentityServerConstants.RsaSigningAlgorithm.PS256
                 );
 
             services.ConfigureNonBreakingSameSiteCookies();
