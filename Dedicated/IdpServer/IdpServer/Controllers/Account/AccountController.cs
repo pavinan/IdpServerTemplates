@@ -266,6 +266,20 @@ namespace IdpServer.Controllers.Account
             return View("LoggedOut", vm);
         }
 
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult ChangePassword(ChangePasswordInputModel inputModel)
+        {
+            return View();
+        }
+
         [HttpGet]
         public IActionResult AccessDenied()
         {
